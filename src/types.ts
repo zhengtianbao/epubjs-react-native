@@ -274,7 +274,13 @@ export interface ReaderProps {
    * @param {SelectedText} selectedText
    * @returns {void} void
    */
-  onSelected?: (selectedText: string, cfiRange: ePubCfi, sentenceText: string, sentenceCfiRange: ePubCfi) => void;
+  onSelected?: (
+    selectedText: string,
+    cfiRange: ePubCfi,
+    paragraphText: string,
+    paragraphCfiRange: ePubCfi,
+    sentenceText: string,
+    sentenceCfiRange: ePubCfi) => void;
   /**
    * Called when screen orientation change is detected
    * @param {string} orientation
@@ -327,7 +333,7 @@ export interface ReaderProps {
   /**
    * Called when book is tapped once
    */
-  onSingleTap?: (e: TapGestureHandlerEventPayload) => void;
+  onSingleTap?: (e?: TapGestureHandlerEventPayload) => void;
   /**
    * Called when the book was double pressed
    * @deprecated use **onDoubleTap** instead
@@ -340,7 +346,7 @@ export interface ReaderProps {
   /**
    * Called when book is long pressed
    */
-  onLongPress?: (e: LongPressGestureHandlerEventPayload) => void;
+  onLongPress?: (e?: LongPressGestureHandlerEventPayload) => void;
   width?: DimensionValue;
   height?: DimensionValue;
   /**

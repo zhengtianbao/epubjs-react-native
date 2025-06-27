@@ -13,13 +13,13 @@ import {
 interface Props {
   width?: DimensionValue;
   height?: DimensionValue;
-  onSingleTap: (e: TapGestureHandlerEventPayload | null) => void;
+  onSingleTap: (e?: TapGestureHandlerEventPayload) => void;
   onDoubleTap: () => void;
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
-  onLongPress: (e: LongPressGestureHandlerEventPayload | null) => void;
+  onLongPress: (e?: LongPressGestureHandlerEventPayload) => void;
   children: React.ReactNode;
 }
 
@@ -79,7 +79,7 @@ export function GestureHandler({
     } else {
       lastTap = Date.now();
       timer = setTimeout(() => {
-        onSingleTap(null);
+        onSingleTap();
         lastTap = null;
         clearTimeout(timer);
       }, 500);
@@ -103,7 +103,7 @@ export function GestureHandler({
           <TouchableWithoutFeedback
             style={{ width, height }}
             onPress={() => Platform.OS === 'ios' && handleDoubleTap()}
-            onLongPress={() => Platform.OS === 'ios' && onLongPress(null)}
+            onLongPress={() => Platform.OS === 'ios' && onLongPress()}
           >
             {children}
           </TouchableWithoutFeedback>
