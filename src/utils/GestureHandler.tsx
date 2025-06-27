@@ -1,23 +1,25 @@
 import React from 'react';
 import { DimensionValue, I18nManager, Platform, View } from 'react-native';
 import {
-  GestureHandlerRootView,
-  GestureDetector,
-  Gesture,
   Directions,
-  TouchableWithoutFeedback,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+  LongPressGestureHandlerEventPayload,
+  TapGestureHandlerEventPayload,
+  TouchableWithoutFeedback
 } from 'react-native-gesture-handler';
 
 interface Props {
   width?: DimensionValue;
   height?: DimensionValue;
-  onSingleTap: () => void;
+  onSingleTap: (e: TapGestureHandlerEventPayload | null) => void;
   onDoubleTap: () => void;
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
-  onLongPress: () => void;
+  onLongPress: (e: LongPressGestureHandlerEventPayload | null) => void;
   children: React.ReactNode;
 }
 
@@ -44,7 +46,7 @@ export function GestureHandler({
     .numberOfTaps(2)
     .onStart(onDoubleTap);
 
-  const longPress = Gesture.LongPress().runOnJS(true).onStart(onLongPress);
+  const longPress = Gesture.LongPress().minDuration(200).runOnJS(true).onBegin(onLongPress);
 
   const swipeLeft = Gesture.Fling()
     .runOnJS(true)
@@ -77,7 +79,7 @@ export function GestureHandler({
     } else {
       lastTap = Date.now();
       timer = setTimeout(() => {
-        onSingleTap();
+        onSingleTap(null);
         lastTap = null;
         clearTimeout(timer);
       }, 500);
@@ -101,7 +103,7 @@ export function GestureHandler({
           <TouchableWithoutFeedback
             style={{ width, height }}
             onPress={() => Platform.OS === 'ios' && handleDoubleTap()}
-            onLongPress={() => Platform.OS === 'ios' && onLongPress()}
+            onLongPress={() => Platform.OS === 'ios' && onLongPress(null)}
           >
             {children}
           </TouchableWithoutFeedback>
@@ -111,7 +113,14 @@ export function GestureHandler({
   }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GestureDetector gesture={Gesture.Exclusive(swipeLeft, swipeRight)}>
+      <GestureDetector gesture={Gesture.Exclusive(
+        swipeLeft,
+        swipeRight,
+        swipeUp,
+        swipeDown,
+        longPress,
+        doubleTap,
+        singleTap,)}>
         <View style={{ width, height }}>{children}</View>
       </GestureDetector>
     </GestureHandlerRootView>

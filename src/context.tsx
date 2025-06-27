@@ -7,21 +7,21 @@ import React, {
 } from 'react';
 import type WebView from 'react-native-webview';
 import type {
-  ePubCfi,
-  FontSize,
-  Location,
-  AnnotationType,
-  SearchResult,
-  Theme,
   Annotation,
   AnnotationStyles,
+  AnnotationType,
   Bookmark,
-  SearchOptions,
-  Section,
-  Toc,
-  Landmark,
+  ePubCfi,
   Flow,
+  FontSize,
+  Landmark,
+  Location,
   PaginateOptions,
+  SearchOptions,
+  SearchResult,
+  Section,
+  Theme,
+  Toc,
 } from './types';
 import * as webViewInjectFunctions from './utils/webViewInjectFunctions';
 
@@ -1396,4 +1396,5 @@ function ReaderProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export { ReaderProvider, ReaderContext };
+export { ReaderContext, ReaderProvider };
+

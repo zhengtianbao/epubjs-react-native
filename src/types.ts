@@ -1,4 +1,5 @@
 import { DimensionValue, ViewStyle } from 'react-native';
+import { LongPressGestureHandlerEventPayload, TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 
 export type PaginateOptions = {
   keepScrollOffset?: boolean;
@@ -326,7 +327,7 @@ export interface ReaderProps {
   /**
    * Called when book is tapped once
    */
-  onSingleTap?: () => void;
+  onSingleTap?: (e: TapGestureHandlerEventPayload) => void;
   /**
    * Called when the book was double pressed
    * @deprecated use **onDoubleTap** instead
@@ -339,7 +340,7 @@ export interface ReaderProps {
   /**
    * Called when book is long pressed
    */
-  onLongPress?: () => void;
+  onLongPress?: (e: LongPressGestureHandlerEventPayload) => void;
   width?: DimensionValue;
   height?: DimensionValue;
   /**
