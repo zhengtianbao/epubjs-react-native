@@ -299,15 +299,65 @@ export default `
       rendition.on("selected", function (cfiRange, contents) {
         const frontPart = cfiRange.substring(cfiRange.indexOf(","), 0);
         const lastChildNode = contents.window.getSelection().baseNode.parentNode.childNodes;
-        const sentenceCfiRangeString = frontPart + ",/1:0,/" + lastChildNode.length + ":" + lastChildNode[lastChildNode.length - 1].length + ")";
-        const sentenceCfiRange = sentenceCfiRangeString;
-        let sentenceText = '';
+        const paragraphCfiRange = frontPart + ",/1:0,/" + lastChildNode.length + ":" + lastChildNode[lastChildNode.length - 1].length + ")";
+        let paragraphText = '';
 
-        book.getRange(sentenceCfiRange).then(function (range) {
+        book.getRange(paragraphCfiRange).then(function (range) {
           if (range) {
-            sentenceText = range.toString();
+            paragraphText = range.toString();
           }
         });
+
+        const selection = contents.window.getSelection();
+        let sentenceRange = contents.document.createRange();
+        if (selection && selection.rangeCount > 0) {
+          let range = selection.getRangeAt(0);
+          if (!range.collapsed) {
+            try {
+              let node = range.startContainer;
+              let text = node.textContent;
+              let startOffset = range.startOffset;
+              let endOffset = range.endOffset;
+
+              // Find sentence boundaries
+              while (startOffset > 0 && !".!?".includes(text[startOffset - 1])) {
+                  startOffset--;
+              }
+
+              while (endOffset < text.length && !".!?".includes(text[endOffset])) {
+                  endOffset++;
+              }
+
+              if (endOffset < text.length && ".!?".includes(text[endOffset])) {
+                  endOffset++;
+              }
+
+              // Get sentence and check if it has matching quotes
+              let tempText = text.slice(startOffset, endOffset);
+              const openQuoteIndex = tempText.indexOf('»');
+              const closeQuoteIndex = tempText.indexOf('«');
+              
+              // If quotes don't match within this sentence, remove them
+              if (openQuoteIndex === -1 || closeQuoteIndex === -1 || closeQuoteIndex < openQuoteIndex) {
+                  // Move start past any quote or whitespace
+                  while (startOffset < endOffset && (text[startOffset] === ' ' || text[startOffset] === '»' || text[startOffset] === '«')) {
+                    startOffset++;
+                  }
+              }
+
+              sentenceRange.setStart(node, startOffset);
+              sentenceRange.setEnd(node, endOffset);
+
+              // Alert if startOffset points to space
+              if (text[startOffset] === ' ') {
+                  //alert('StartOffset is space!');
+              }
+            } catch (error) {
+                return null;
+            }
+          }
+        }
+        let sentenceCfiRange = contents.cfiFromRange(sentenceRange);
 
         book.getRange(cfiRange).then(function (range) {
           if (range) {
@@ -315,8 +365,10 @@ export default `
               type: 'onSelected',
               cfiRange: cfiRange,
               text: range.toString(),
-              sentenceCfiRange: sentenceCfiRange,
-              sentenceText: sentenceText,
+              paragraphCfiRange: paragraphCfiRange,
+              paragraphText: paragraphText,
+              sentenceCfiRange: sentenceCfiRange.toString(),
+              sentenceText: sentenceRange.toString(),
             }));
           }
         });
