@@ -7,9 +7,9 @@ import type {
 } from 'react-native-webview/lib/WebViewTypes';
 import { defaultTheme as initialTheme, ReaderContext } from './context';
 import type { Bookmark, ReaderProps } from './types';
+import { GestureHandler } from './utils/GestureHandler';
 import { OpeningBook } from './utils/OpeningBook';
 import INTERNAL_EVENTS from './utils/internalEvents.util';
-import { GestureHandler } from './utils/GestureHandler';
 
 export type ViewProps = Omit<ReaderProps, 'src' | 'fileSystem'> & {
   templateUri: string;
@@ -114,7 +114,9 @@ export function View({
   const [selectedText, setSelectedText] = useState<{
     cfiRange: string;
     cfiRangeText: string;
-  }>({ cfiRange: '', cfiRangeText: '' });
+    sentenceCfiRange: string;
+    sentenceCfiRangeText: string;
+  }>({ cfiRange: '', cfiRangeText: '', sentenceCfiRange: '', sentenceCfiRangeText: '' });
 
   useEffect(() => {
     setFlow(flow || 'auto');
@@ -251,10 +253,10 @@ export function View({
     }
 
     if (type === 'onSelected') {
-      const { cfiRange, text } = parsedEvent;
+      const { cfiRange, text, sentenceCfiRange, sentenceText } = parsedEvent;
 
-      setSelectedText({ cfiRange, cfiRangeText: text });
-      return onSelected(text, cfiRange);
+      setSelectedText({ cfiRange, cfiRangeText: text, sentenceCfiRange, sentenceCfiRangeText: sentenceText});
+      return onSelected(text, cfiRange, sentenceText, sentenceCfiRange );
     }
 
     if (type === 'onOrientationChange') {

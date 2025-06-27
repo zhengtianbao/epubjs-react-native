@@ -297,12 +297,26 @@ export default `
       });
 
       rendition.on("selected", function (cfiRange, contents) {
+        const frontPart = cfiRange.substring(cfiRange.indexOf(","), 0);
+        const lastChildNode = contents.window.getSelection().baseNode.parentNode.childNodes;
+        const sentenceCfiRangeString = frontPart + ",/1:0,/" + lastChildNode.length + ":" + lastChildNode[lastChildNode.length - 1].length + ")";
+        const sentenceCfiRange = sentenceCfiRangeString;
+        let sentenceText = '';
+
+        book.getRange(sentenceCfiRange).then(function (range) {
+          if (range) {
+            sentenceText = range.toString();
+          }
+        });
+
         book.getRange(cfiRange).then(function (range) {
           if (range) {
             reactNativeWebview.postMessage(JSON.stringify({
               type: 'onSelected',
               cfiRange: cfiRange,
               text: range.toString(),
+              sentenceCfiRange: sentenceCfiRange,
+              sentenceText: sentenceText,
             }));
           }
         });

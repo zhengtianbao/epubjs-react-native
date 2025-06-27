@@ -274,7 +274,7 @@ export interface ReaderProps {
    * @param {SelectedText} selectedText
    * @returns {void} void
    */
-  onSelected?: (selectedText: string, cfiRange: ePubCfi) => void;
+  onSelected?: (selectedText: string, cfiRange: ePubCfi, sentenceText: string, sentenceCfiRange: ePubCfi) => void;
   /**
    * Called when screen orientation change is detected
    * @param {string} orientation
