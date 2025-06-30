@@ -319,6 +319,17 @@ export default `
           let textContent = container.textContent.replace(/<[^>]+>/g, '').trim();
           const selectedText = selection.toString().trim();
           if (selectedText) {
+            // Regex to match sentences, avoiding URLs
+            const urlRegex = /https?:\\/\\/[^\\s]+/g;
+            const preservedUrls = [];
+            let placeholder = '__URL__';
+
+            // Temporarily replace URLs with placeholders to avoid splitting them
+            textContent = textContent.replace(urlRegex, (url, index) => {
+                preservedUrls.push({ placeholder: placeholder+ index + '__', url });
+                return  placeholder+ index + '__';
+            });
+
             const sentenceRegex = /[^.!?]+[.!?]/g;
             const sentences = textContent.match(sentenceRegex) || [];
             if (sentences.length > 0) {
@@ -341,6 +352,10 @@ export default `
 
                 if (rangeTextOffset >= sentenceStart && rangeTextOffset <= sentenceEnd && s.includes(selectedText)) {
                   sentenceText = s;
+                  // Restore URLs in the selected sentence
+                  preservedUrls.forEach(({ placeholder, url }) => {
+                      sentenceText = sentenceText.replace(placeholder, url);
+                  });
                   break;
                 }
                 currentOffset = sentenceEnd;
@@ -349,6 +364,10 @@ export default `
             // Fallback: if no sentences matched (e.g., in <title> with no punctuation), use the entire text
             if (!sentenceText && textContent.includes(selectedText)) {
               sentenceText = textContent;
+              // Restore URLs in the fallback text
+              preservedUrls.forEach(({ placeholder, url }) => {
+                  sentenceText = sentenceText.replace(placeholder, url);
+              });
             }
           }
         }
