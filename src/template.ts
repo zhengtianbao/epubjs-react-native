@@ -297,11 +297,12 @@ export default `
       });
 
       rendition.on("selected", function (cfiRange, contents) {
+        let paragraphText = '';
+        let sentenceText = '';
+
         const frontPart = cfiRange.substring(cfiRange.indexOf(","), 0);
         const lastChildNode = contents.window.getSelection().baseNode.parentNode.childNodes;
         const paragraphCfiRange = frontPart + ",/1:0,/" + lastChildNode.length + ":" + lastChildNode[lastChildNode.length - 1].length + ")";
-        let paragraphText = '';
-
         book.getRange(paragraphCfiRange).then(function (range) {
           if (range) {
             paragraphText = range.toString();
@@ -309,55 +310,48 @@ export default `
         });
 
         const selection = contents.window.getSelection();
-        let sentenceRange = contents.document.createRange();
-        if (selection && selection.rangeCount > 0) {
-          let range = selection.getRangeAt(0);
-          if (!range.collapsed) {
-            try {
-              let node = range.startContainer;
-              let text = node.textContent;
-              let startOffset = range.startOffset;
-              let endOffset = range.endOffset;
+        if (selection.rangeCount > 0 && !selection.isCollapsed) {
+          const range = selection.getRangeAt(0);
+          let container = range.commonAncestorContainer;
+          if (container.nodeType === Node.TEXT_NODE) {
+            container = container.parentElement;
+          }
+          let textContent = container.textContent.replace(/<[^>]+>/g, '').trim();
+          const selectedText = selection.toString().trim();
+          if (selectedText) {
+            const sentenceRegex = /[^.!?]+[.!?]/g;
+            const sentences = textContent.match(sentenceRegex) || [];
+            if (sentences.length > 0) {
+              let currentOffset = 0;
+              for (let s of sentences) {
+                s = s.trim();
+                const sentenceStart = textContent.indexOf(s, currentOffset);
+                const sentenceEnd = sentenceStart + s.length;
 
-              // Find sentence boundaries
-              while (startOffset > 0 && !".!?".includes(text[startOffset - 1])) {
-                  startOffset--;
+                // Check if the selection range falls within this sentence
+                const rangeStartOffset = range.startOffset;
+                const rangeNode = range.startContainer;
+                let rangeTextOffset = sentenceStart;
+
+                // If the range is in a text node, adjust the offset relative to the textContent
+                if (rangeNode.nodeType === Node.TEXT_NODE) {
+                  const textBeforeNode = textContent.substring(0, textContent.indexOf(rangeNode.textContent));
+                  rangeTextOffset = textBeforeNode.length + rangeStartOffset;
+                }
+
+                if (rangeTextOffset >= sentenceStart && rangeTextOffset <= sentenceEnd && s.includes(selectedText)) {
+                  sentenceText = s;
+                  break;
+                }
+                currentOffset = sentenceEnd;
               }
-
-              while (endOffset < text.length && !".!?".includes(text[endOffset])) {
-                  endOffset++;
-              }
-
-              if (endOffset < text.length && ".!?".includes(text[endOffset])) {
-                  endOffset++;
-              }
-
-              // Get sentence and check if it has matching quotes
-              let tempText = text.slice(startOffset, endOffset);
-              const openQuoteIndex = tempText.indexOf('»');
-              const closeQuoteIndex = tempText.indexOf('«');
-              
-              // If quotes don't match within this sentence, remove them
-              if (openQuoteIndex === -1 || closeQuoteIndex === -1 || closeQuoteIndex < openQuoteIndex) {
-                  // Move start past any quote or whitespace
-                  while (startOffset < endOffset && (text[startOffset] === ' ' || text[startOffset] === '»' || text[startOffset] === '«')) {
-                    startOffset++;
-                  }
-              }
-
-              sentenceRange.setStart(node, startOffset);
-              sentenceRange.setEnd(node, endOffset);
-
-              // Alert if startOffset points to space
-              if (text[startOffset] === ' ') {
-                  //alert('StartOffset is space!');
-              }
-            } catch (error) {
-                return null;
+            }
+            // Fallback: if no sentences matched (e.g., in <title> with no punctuation), use the entire text
+            if (!sentenceText && textContent.includes(selectedText)) {
+              sentenceText = textContent;
             }
           }
         }
-        let sentenceCfiRange = contents.cfiFromRange(sentenceRange);
 
         book.getRange(cfiRange).then(function (range) {
           if (range) {
@@ -365,10 +359,8 @@ export default `
               type: 'onSelected',
               cfiRange: cfiRange,
               text: range.toString(),
-              paragraphCfiRange: paragraphCfiRange,
               paragraphText: paragraphText,
-              sentenceCfiRange: sentenceCfiRange.toString(),
-              sentenceText: sentenceRange.toString(),
+              sentenceText: sentenceText,
             }));
           }
         });

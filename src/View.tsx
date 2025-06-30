@@ -114,11 +114,9 @@ export function View({
   const [selectedText, setSelectedText] = useState<{
     cfiRange: string;
     cfiRangeText: string;
-    paragraphCfiRange: string;
     paragraphCfiRangeText: string;
-    sentenceCfiRange: string;
     sentenceCfiRangeText: string;
-  }>({ cfiRange: '', cfiRangeText: '', paragraphCfiRange: '', paragraphCfiRangeText: '', sentenceCfiRange: '', sentenceCfiRangeText: '' });
+  }>({ cfiRange: '', cfiRangeText: '', paragraphCfiRangeText: '', sentenceCfiRangeText: '' });
 
   useEffect(() => {
     setFlow(flow || 'auto');
@@ -255,10 +253,10 @@ export function View({
     }
 
     if (type === 'onSelected') {
-      const { cfiRange, text, paragraphCfiRange, paragraphText, sentenceCfiRange, sentenceText } = parsedEvent;
+      const { cfiRange, text, paragraphText, sentenceText } = parsedEvent;
 
-      setSelectedText({ cfiRange, cfiRangeText: text, paragraphCfiRange, paragraphCfiRangeText: paragraphText, sentenceCfiRange, sentenceCfiRangeText: sentenceText});
-      return onSelected(text, cfiRange, paragraphText, paragraphCfiRange, sentenceText, sentenceCfiRange );
+      setSelectedText({ cfiRange, cfiRangeText: text, paragraphCfiRangeText: paragraphText, sentenceCfiRangeText: sentenceText});
+      return onSelected(text, cfiRange, paragraphText, sentenceText);
     }
 
     if (type === 'onOrientationChange') {
