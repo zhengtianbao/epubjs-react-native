@@ -1,3 +1,4 @@
+import { DancingScriptBase64, JetBrainsMonoBase64, ManufacturingBase64, MenbereBase64, RobotoBase64, SapceMonoBase64 } from './fonts';
 import * as webViewJavaScriptFunctions from './utils/webViewInjectFunctions';
 
 export default `
@@ -78,6 +79,42 @@ export default `
         allowPopups: allowPopups,
         allowScriptedContent: allowScriptedContent
       });
+
+      rendition.hooks.content.register((contents) => {
+        const document = contents.window.document
+        if (document) {
+          const css = \`
+            @font-face {
+              font-family: "SpaceMono";
+              src: url('data:font/ttf;base64,${SapceMonoBase64}') format('truetype');
+            }
+            @font-face {
+              font-family: "Roboto";
+              src: url('data:font/ttf;base64,${RobotoBase64}') format('truetype');
+            }
+            @font-face {
+              font-family: "Menbere";
+              src: url('data:font/ttf;base64,${MenbereBase64}') format('truetype');
+            }
+            @font-face {
+              font-family: "JetBrainsMono";
+              src: url('data:font/ttf;base64,${JetBrainsMonoBase64}') format('truetype');
+            }
+            @font-face {
+              font-family: "Manufacturing";
+              src: url('data:font/ttf;base64,${ManufacturingBase64}') format('truetype');
+            }
+            @font-face {
+              font-family: "DancingScript";
+              src: url('data:font/ttf;base64,${DancingScriptBase64}') format('truetype');
+            }
+          \`
+          const style = document.createElement('style')
+          style.appendChild(document.createTextNode(css))
+          document.head.appendChild(style)
+        }
+      })
+
      const reactNativeWebview = window.ReactNativeWebView !== undefined && window.ReactNativeWebView!== null ? window.ReactNativeWebView: window;
       reactNativeWebview.postMessage(JSON.stringify({ type: "onStarted" }));
 
