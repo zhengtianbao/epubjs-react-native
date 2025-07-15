@@ -207,35 +207,50 @@ export default `
               epubKey: book.key(),
               locations: book.locations.save(),
               totalLocations: book.locations.total,
-              currentLocation: rendition.currentLocation(),
-              progress: book.locations.percentageFromCfi(rendition.currentLocation().start.cfi),
             }));
-          });
-        })
-        .then(function () {
-          var displayed = rendition.display();
+          })
+          .then(function () {
+            var displayed = rendition.display();
 
-          displayed.then(function () {
-            var currentLocation = rendition.currentLocation();
+            displayed.then(function () {
+              var currentLocation = rendition.currentLocation();
 
-            reactNativeWebview.postMessage(JSON.stringify({
-              type: "onReady",
-              totalLocations: book.locations.total,
-              currentLocation: currentLocation,
-              progress: book.locations.percentageFromCfi(currentLocation.start.cfi),
-            }));
-          });
+              reactNativeWebview.postMessage(JSON.stringify({
+                type: "onReady",
+                totalLocations: book.locations.total,
+                currentLocation: currentLocation,
+                progress: book.locations.percentageFromCfi(currentLocation.start.cfi),
+              }));
+            });
 
-          book
-          .coverUrl()
-          .then(async (url) => {
-            var reader = new FileReader();
-            reader.onload = (res) => {
+            book
+            .coverUrl()
+            .then(async (url) => {
+              var reader = new FileReader();
+              reader.onload = (res) => {
+                reactNativeWebview.postMessage(
+                  JSON.stringify({
+                    type: "meta",
+                    metadata: {
+                      cover: reader.result,
+                      author: book.package.metadata.creator,
+                      title: book.package.metadata.title,
+                      description: book.package.metadata.description,
+                      language: book.package.metadata.language,
+                      publisher: book.package.metadata.publisher,
+                      rights: book.package.metadata.rights,
+                    },
+                  })
+                );
+              };
+              reader.readAsDataURL(await fetch(url).then((res) => res.blob()));
+            })
+            .catch(() => {
               reactNativeWebview.postMessage(
                 JSON.stringify({
                   type: "meta",
                   metadata: {
-                    cover: reader.result,
+                    cover: undefined,
                     author: book.package.metadata.creator,
                     title: book.package.metadata.title,
                     description: book.package.metadata.description,
@@ -245,40 +260,23 @@ export default `
                   },
                 })
               );
-            };
-            reader.readAsDataURL(await fetch(url).then((res) => res.blob()));
-          })
-          .catch(() => {
-            reactNativeWebview.postMessage(
-              JSON.stringify({
-                type: "meta",
-                metadata: {
-                  cover: undefined,
-                  author: book.package.metadata.creator,
-                  title: book.package.metadata.title,
-                  description: book.package.metadata.description,
-                  language: book.package.metadata.language,
-                  publisher: book.package.metadata.publisher,
-                  rights: book.package.metadata.rights,
-                },
-              })
-            );
-          });
+            });
 
-          book.loaded.navigation.then(function (item) {
+            book.loaded.navigation.then(function (item) {
+              reactNativeWebview.postMessage(JSON.stringify({
+                type: 'onNavigationLoaded',
+                toc: item.toc,
+                landmarks: item.landmarks
+              }));
+            });
+          })
+          .catch(function (err) {
             reactNativeWebview.postMessage(JSON.stringify({
-              type: 'onNavigationLoaded',
-              toc: item.toc,
-              landmarks: item.landmarks
+              type: "onDisplayError",
+              reason: reason
             }));
           });
-        })
-        .catch(function (err) {
-          reactNativeWebview.postMessage(JSON.stringify({
-          type: "onDisplayError",
-          reason: reason
-        }));
-      });
+        });
 
       rendition.on('started', () => {
         rendition.themes.register({ theme: theme });

@@ -15364,11 +15364,13 @@ class locations_Locations {
     }
 
     this.q.pause();
+    const sections = [];
     this.spine.each(function (section) {
       if (section.linear) {
-        this.q.enqueue(this.process.bind(this), section);
+        sections.push(section);
       }
     }.bind(this));
+    this.q.enqueue(this.process.bind(this), sections);
     return this.q.run().then(function () {
       this.total = this._locations.length - 1;
 
@@ -15389,15 +15391,33 @@ class locations_Locations {
     };
   }
 
-  process(section) {
-    return section.load(this.request).then(function (contents) {
-      var completed = new core["defer"]();
-      var locations = this.parse(contents, section.cfiBase);
-      this._locations = this._locations.concat(locations);
-      section.unload();
-      this.processingTimeout = setTimeout(() => completed.resolve(locations), this.pause);
-      return completed.promise;
-    }.bind(this));
+  process(sectionOrSections) {
+    const loadedContents = new Array(sectionOrSections.length);
+    const sections = sectionOrSections; // Async load all sections
+
+    return new Promise(resolveProcess => {
+      Promise.all(sections.map((section, index) => {
+        return new Promise(resolve => {
+          section.load(this.request).then(contents => {
+            loadedContents[index] = contents;
+            resolve();
+          });
+        });
+      })).then(() => {
+        //Process sequentially
+        for (let i = 0; i < loadedContents.length; i++) {
+          const contents = loadedContents[i];
+          const section = sections[i];
+          var completed = new core["defer"]();
+          var locations = this.parse(contents, section.cfiBase);
+          this._locations = this._locations.concat(locations);
+          section.unload();
+          this.processingTimeout = setTimeout(() => completed.resolve(locations), this.pause);
+        }
+
+        resolveProcess();
+      });
+    });
   }
 
   parse(contents, cfiBase, chars) {
